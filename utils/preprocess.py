@@ -23,15 +23,18 @@ def save_vocabs():
 	pickle.dump(POS_VOCAB, pickle_out)
 	pickle_out.close()
 
-def tokenize(text):
+def tokenize(text, POS=True):
 	temp_file_path_1 = '/tmp/input.txt'
 	temp_file_path_2 = '/tmp/output.txt'
 
 	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
 
-	command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
-			   edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger \
-			   -textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
+	if POS:
+		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
+				   edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger \
+				   -textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
+	else:
+		command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
 	subprocess.call(command, shell=True)
 
 	tokens, pos_tags = [], []
@@ -41,7 +44,8 @@ def tokenize(text):
 			line = l.strip().split()
 			if line:
 				tokens.append(line[0])
-				pos_tags.append(line[1])
+				if POS:
+					pos_tags.append(line[1])
 
 	return tokens, pos_tags
 
@@ -61,10 +65,10 @@ def find_boundaries(answer_dict, text):
 	answer_start_char = answer_dict['answer_start']
 	answer_text = answer_dict['text']
 
-	tokens, _ = tokenize(text[:answer_start_char])
+	tokens, _ = tokenize(text[:answer_start_char], POS=False)
 	answer_start = len(tokens)
 
-	tokens, _ = tokenize(answer_text)
+	tokens, _ = tokenize(answer_text, POS=False)
 
 	answer_end = answer_start + len(tokens) - 1
 
@@ -74,16 +78,16 @@ def main():
 	with open("./data/train-v1.1.json", 'rb') as file:
 		data = json.loads(file.read())
 
-	data = data['data'][:1]
+	data = data['data']
 
 	processed_records = []
 
-	for data_title in data:
+	for data_title in tqdm(data):
 		name = data_title["title"]
 
 		pos_training_file = open(POS_SAVE_PATH + name + ".txt", 'w+')
 
-		for passage in tqdm(data_title['paragraphs'][:1]):
+		for passage in data_title['paragraphs']:
 			context_tokens, pos_tags = tokenize(passage['context'])
 
 			pos_training_file.write(" ".join(pos_tags) + ' \n')
@@ -104,6 +108,8 @@ def main():
 				processed_records.append([
 					context_tokens, ques_tokens, answer_start, 
 					answer_end, context_pos_tokens, ques_pos_tokens])
+
+			pos_training_file.write("\n")
 
 		pos_training_file.close()
 
