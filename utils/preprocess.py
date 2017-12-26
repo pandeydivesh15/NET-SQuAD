@@ -24,10 +24,10 @@ def save_vocabs():
 	pickle_out.close()
 
 def tokenize(text, POS=True):
-	temp_file_path_1 = '/tmp/input.txt'
-	temp_file_path_2 = '/tmp/output.txt'
+	temp_file_path_1 = '/tmp/input1.txt'
+	temp_file_path_2 = '/tmp/output1.txt'
 
-	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
+	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
 
 	if POS:
 		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
@@ -47,13 +47,16 @@ def tokenize(text, POS=True):
 				if POS:
 					pos_tags.append(line[1])
 
+	os.remove(temp_file_path_1)
+	os.remove(temp_file_path_2)
+
 	return tokens, pos_tags
 
 def tokenize_questions(text, POS=True):
-	temp_file_path_1 = '/tmp/input.txt'
-	temp_file_path_2 = '/tmp/output.txt'
+	temp_file_path_1 = '/tmp/input2.txt'
+	temp_file_path_2 = '/tmp/output2.txt'
 
-	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
+	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
 
 	if POS:
 		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
@@ -82,16 +85,18 @@ def tokenize_questions(text, POS=True):
 					if POS:
 						pos_tags_list.append(pos_tags)
 					tokens, pos_tags = [], []
-
+	
+	os.remove(temp_file_path_1)
+	os.remove(temp_file_path_2)
+	
 	return tokens_list, pos_tags_list
 
 def tokenize_boundaries(text):
-	temp_file_path_1 = '/tmp/input.txt'
-	temp_file_path_2 = '/tmp/output.txt'
+	temp_file_path_1 = '/tmp/input3.txt'
+	temp_file_path_2 = '/tmp/output3.txt'
 
-	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
+	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
 
-	
 	command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
 	
 	subprocess.call(command, shell=True)
@@ -109,6 +114,9 @@ def tokenize_boundaries(text):
 				else:
 					tokens.append(line[0])
 		tokens_list.append(tokens)
+	
+	os.remove(temp_file_path_1)
+	os.remove(temp_file_path_2)
 
 	return tokens_list
 
@@ -164,7 +172,11 @@ def main():
 			all_ques_tokens, all_pos_tags = tokenize_questions(all_questions)
 
 			for i, ques in enumerate(passage['qas']):
-				ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
+				try:
+					ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
+				except Exception:
+					print passage['qas']
+					print all_ques_tokens, all_pos_tags
 
 				pos_training_file.write(" ".join(pos_tags) + ' \n')
 
