@@ -9,7 +9,7 @@ def load_vector_dict():
 	if NLP is not None:
 		return
 
-	NLP = w2v.Word2Vec.load("./data/POS_embedd/POS_small.w2v")
+	NLP = w2v.Word2Vec.load("./data/saves/POS_embedd/POS_small.w2v")
 
 def get_sentence_vectors(sentence):
 	"""

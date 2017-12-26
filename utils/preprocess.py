@@ -49,6 +49,69 @@ def tokenize(text, POS=True):
 
 	return tokens, pos_tags
 
+def tokenize_questions(text, POS=True):
+	temp_file_path_1 = '/tmp/input.txt'
+	temp_file_path_2 = '/tmp/output.txt'
+
+	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
+
+	if POS:
+		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
+				   edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger \
+				   -textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
+	else:
+		command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
+	subprocess.call(command, shell=True)
+
+	tokens_list, pos_tags_list = [], []
+	tokens, pos_tags = [], []
+
+	with open(temp_file_path_2, 'rb') as file:
+		check = True
+		for l in file:
+			line = l.strip().split()
+			if line:
+				if check:
+					tokens.append(line[0])
+					if POS:
+						pos_tags.append(line[1])
+			else:
+				check = not check
+				if check:
+					tokens_list.append(tokens)
+					if POS:
+						pos_tags_list.append(pos_tags)
+					tokens, pos_tags = [], []
+
+	return tokens_list, pos_tags_list
+
+def tokenize_boundaries(text):
+	temp_file_path_1 = '/tmp/input.txt'
+	temp_file_path_2 = '/tmp/output.txt'
+
+	subprocess.call('echo "' + text + '" > ' + temp_file_path_1, shell=True)
+
+	
+	command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
+	
+	subprocess.call(command, shell=True)
+
+	tokens_list = []
+	tokens = []
+
+	with open(temp_file_path_2, 'rb') as file:
+		for l in file:
+			line = l.strip().split()
+			if line:
+				if line[0] == "<NULL>":
+					tokens_list.append(tokens)
+					tokens = []
+				else:
+					tokens.append(line[0])
+		tokens_list.append(tokens)
+
+	return tokens_list
+
 def find_word_tokens(words):
 	tokens = []
 	for word in words:
@@ -65,12 +128,10 @@ def find_boundaries(answer_dict, text):
 	answer_start_char = answer_dict['answer_start']
 	answer_text = answer_dict['text']
 
-	tokens, _ = tokenize(text[:answer_start_char], POS=False)
-	answer_start = len(tokens)
-
-	tokens, _ = tokenize(answer_text, POS=False)
-
-	answer_end = answer_start + len(tokens) - 1
+	tokens_list = tokenize_boundaries(
+					text[:answer_start_char] + " <NULL> " + answer_text)
+	answer_start = len(tokens_list[0])
+	answer_end = answer_start + len(tokens_list[1]) - 1
 
 	return answer_start, answer_end # 0-based indexing
 
@@ -95,8 +156,15 @@ def main():
 			context_tokens = find_word_tokens(context_tokens)
 			context_pos_tokens = find_pos_tokens(pos_tags)
 
+			all_questions = ""
 			for ques in passage['qas']:
-				ques_tokens, pos_tags = tokenize(ques['question'])
+				all_questions += ques['question']
+				all_questions += " None. "
+
+			all_ques_tokens, all_pos_tags = tokenize_questions(all_questions)
+
+			for i, ques in enumerate(passage['qas']):
+				ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
 
 				pos_training_file.write(" ".join(pos_tags) + ' \n')
 
