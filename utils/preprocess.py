@@ -27,12 +27,14 @@ def tokenize(text, POS=True):
 	temp_file_path_1 = '/tmp/input1.txt'
 	temp_file_path_2 = '/tmp/output1.txt'
 
-	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
+	with open(temp_file_path_1, 'w+') as f:
+		f.write(text.encode('utf8'))
+	# subprocess.Popen('echo "%s" > %s' % (text, temp_file_path_1), shell=True, stdout=subprocess.PIPE, executable="/bin/bash")
 
 	if POS:
-		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
-				   edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger \
-				   -textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
+		command =  "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model " + \
+				   "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger " + \
+				   "-textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
 	else:
 		command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
 	subprocess.call(command, shell=True)
@@ -41,27 +43,24 @@ def tokenize(text, POS=True):
 
 	with open(temp_file_path_2, 'rb') as file:
 		for l in file:
-			line = l.strip().split()
+			line = l.decode('utf8').strip().split()
 			if line:
 				tokens.append(line[0])
 				if POS:
 					pos_tags.append(line[1])
-
-	os.remove(temp_file_path_1)
-	os.remove(temp_file_path_2)
-
 	return tokens, pos_tags
 
 def tokenize_questions(text, POS=True):
 	temp_file_path_1 = '/tmp/input2.txt'
 	temp_file_path_2 = '/tmp/output2.txt'
 
-	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
+	with open(temp_file_path_1, 'w+') as f:
+		f.write(text.encode('utf8'))
 
 	if POS:
-		command = "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model \
-				   edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger \
-				   -textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
+		command =  "java edu.stanford.nlp.tagger.maxent.MaxentTagger -model " + \
+				   "edu/stanford/nlp/models/pos-tagger/english-left3words/english-left3words-distsim.tagger " + \
+				   "-textFile %s -outputFormat tsv > %s" % (temp_file_path_1, temp_file_path_2)
 	else:
 		command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
 	subprocess.call(command, shell=True)
@@ -72,7 +71,7 @@ def tokenize_questions(text, POS=True):
 	with open(temp_file_path_2, 'rb') as file:
 		check = True
 		for l in file:
-			line = l.strip().split()
+			line = l.decode('utf8').strip().split()
 			if line:
 				if check:
 					tokens.append(line[0])
@@ -86,16 +85,14 @@ def tokenize_questions(text, POS=True):
 						pos_tags_list.append(pos_tags)
 					tokens, pos_tags = [], []
 	
-	os.remove(temp_file_path_1)
-	os.remove(temp_file_path_2)
-	
 	return tokens_list, pos_tags_list
 
 def tokenize_boundaries(text):
 	temp_file_path_1 = '/tmp/input3.txt'
 	temp_file_path_2 = '/tmp/output3.txt'
 
-	subprocess.call('echo "%s" > %s' % (text, temp_file_path_1), shell=True)
+	with open(temp_file_path_1, 'w+') as f:
+		f.write(text.encode('utf8'))
 
 	command = "java edu.stanford.nlp.process.PTBTokenizer %s > %s" % (temp_file_path_1, temp_file_path_2)
 	
@@ -106,7 +103,7 @@ def tokenize_boundaries(text):
 
 	with open(temp_file_path_2, 'rb') as file:
 		for l in file:
-			line = l.strip().split()
+			line = l.decode('utf8').strip().split()
 			if line:
 				if line[0] == "<NULL>":
 					tokens_list.append(tokens)
@@ -114,9 +111,6 @@ def tokenize_boundaries(text):
 				else:
 					tokens.append(line[0])
 		tokens_list.append(tokens)
-	
-	os.remove(temp_file_path_1)
-	os.remove(temp_file_path_2)
 
 	return tokens_list
 
