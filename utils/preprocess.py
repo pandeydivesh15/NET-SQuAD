@@ -72,18 +72,21 @@ def tokenize_questions(text, POS=True):
 		check = True
 		for l in file:
 			line = l.decode('utf8').strip().split()
-			if line:
+			if line and line[0] != '<None>':
 				if check:
 					tokens.append(line[0])
 					if POS:
 						pos_tags.append(line[1])
 			else:
-				check = not check
-				if check:
+				if line:
 					tokens_list.append(tokens)
 					if POS:
 						pos_tags_list.append(pos_tags)
 					tokens, pos_tags = [], []
+					check = False
+				else:
+					if not check:
+						check = True
 	
 	return tokens_list, pos_tags_list
 
@@ -161,17 +164,13 @@ def main():
 			all_questions = ""
 			for ques in passage['qas']:
 				all_questions += ques['question']
-				all_questions += " None. "
+				all_questions += " <None>. "
 
 			all_ques_tokens, all_pos_tags = tokenize_questions(all_questions)
 
 			for i, ques in enumerate(passage['qas']):
-				try:
-					ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
-				except Exception:
-					print passage['qas']
-					print all_ques_tokens, all_pos_tags
-
+				ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
+				
 				pos_training_file.write(" ".join(pos_tags) + ' \n')
 
 				ques_tokens = find_word_tokens(ques_tokens)
