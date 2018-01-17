@@ -60,6 +60,55 @@ class POSVocab(Vocabulary):
 	def get_sentence_embeddings(self, indices):
 		return [get_word_embeddings(idx) for idx in indices]
 
+class CharVocab():
+	def __init__(self):
+		self.char_to_index = dict()
+		self.index_to_char = dict()
+
+		self.default_index = 0
+		self.default_char = '<default_char>'
+		self.char_to_index[self.default_char] = self.default_index
+		self.index_to_char[self.default_index] = self.default_char
+
+		self.start_index = 1
+		self.start_char = '<start>'
+		self.char_to_index[self.start_char] = self.start_index
+		self.index_to_char[self.start_index] = self.start_char
+
+		self.end_index = 2
+		self.end_char = '<end>'
+		self.char_to_index[self.end_char] = self.end_index
+		self.index_to_char[self.end_index] = self.end_char
+
+		self.counter = 3
+
+	def insert(self, char):
+		self.index_to_char[self.counter] = char 
+		self.char_to_index[char] = self.counter 
+		self.counter += 1
+
+		return self.counter - 1 
+
+	def try_inserting(self, char):
+		if char in self.char_to_index.keys():
+			return self.char_to_index[char]
+		else:
+			return self.insert(char)
+
+	def get_char(self, index):
+		if (index <= 0) or (index >= self.counter):
+			return self.default_char
+		return self.index_to_char[index]
+
+	def get_index(self, char):
+		if char in self.char_to_index.keys(): 
+			return self.char_to_index[char]
+		else:
+			return self.default_index
+
+	def get_vocab_size(self):
+		return self.counter
+
 
 
 
