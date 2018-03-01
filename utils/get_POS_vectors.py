@@ -1,15 +1,15 @@
 import gensim.models.word2vec as w2v
 import numpy as np
 
-VECTOR_DIM = 50
-NLP = None
+POS_VECTOR_DIM = 50
+POS_NLP = None
 
 def load_vector_dict():
-	global NLP
-	if NLP is not None:
+	global POS_NLP
+	if POS_NLP is not None:
 		return
 
-	NLP = w2v.Word2Vec.load("./data/saves/POS_embedd/POS_small.w2v")
+	POS_NLP = w2v.Word2Vec.load("./data/saves/POS_embedd/POS_small.w2v")
 
 def get_sentence_vectors(sentence):
 	"""
@@ -26,9 +26,9 @@ def get_POS_vector(word):
 
 	s = word.decode("utf-8")
 	try:
-		vect = NLP.wv[s]
+		vect = POS_NLP.wv[s]
 	except:
-		vect = np.zeros(50, dtype = np.float32)
+		vect = np.zeros(POS_VECTOR_DIM, dtype = np.float32)
 	
 	return vect
 
