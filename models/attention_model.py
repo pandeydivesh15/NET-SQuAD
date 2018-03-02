@@ -14,6 +14,7 @@ from get_NE_word_embedd import NE_VECTOR_DIM
 from vocab import CharVocab, WordVocab
 
 from charCNN import charCNN
+from ne_fusion import NE_fusion
 
 VOCAB_SAVE_PATH = "./data/saves/vocab/"
 WORD_VOCAB = pickle.load(open(VOCAB_SAVE_PATH + 'word_vocab.pickle', 'rb'))
@@ -31,6 +32,10 @@ class AttentionNetwork():
 
 		self.data = data_reader
 		
+		self.use_named_ent_info = True
+		self.use_NER = self.use_named_ent_info # NER
+		self.use_NET_info = True # NET
+
 		self.add_placeholders()
 		self.embedding_layer()
 		self.attention_encoder()
@@ -39,8 +44,6 @@ class AttentionNetwork():
 		init = tf.global_variables_initializer()
 		self.sess = tf.Session()
 		self.sess.run(init)
-
-		self.use_named_entities_info = False
 
 	def add_placeholders(self):
 		self.passage_word_embedd = tf.placeholder(tf.float32, (None, None, VECTOR_DIM))
@@ -113,14 +116,41 @@ class AttentionNetwork():
 
 		# Final shape = (batch_size, num_words, CNN_OUTPUT_SIZE)
 
-		print passage_charCNN_output.get_shape().as_list()
+		# print passage_charCNN_output.get_shape().as_list()
 
+		# Concatenate GloVE, POS, and Character embeddings
+		self.passage_embedd = tf.concat(
+			[self.passage_word_embedd, self.passage_POS_embedd, passage_charCNN_output],
+			axis=2)
+		self.question_embedd = tf.concat(
+			[self.question_word_embedd, self.question_POS_embedd, question_charCNN_output],
+			axis=2)
 
+		# Now for using named entities information
+		if self.use_named_ent_info:
+			if self.use_NER and not self.use_NET_info:
+				# Use only NER information
+				# Simply concatenate NER embeddings
+				self.passage_embedd = tf.concat([self.passage_embedd, self.passage_NE_embedd_1], axis=2)
+				self.question_embedd = tf.concat([self.question_embedd, self.question_NE_embedd_1], axis=2)
+			else:
+				# Merge NER and NET info
+				# Fusion unit
+				passage_NE_embed = NE_fusion(
+					self.passage_NE_embedd_1, 
+					self.passage_NE_embedd_2)
 
+				question_NE_embed = NE_fusion(
+					self.question_NE_embedd_1, 
+					self.question_NE_embedd_2,
+					reuse_scope=True)
+				# Finally concatenate
+				self.passage_embedd = tf.concat([self.passage_embedd, passage_NE_embed], axis=2)
+				self.question_embedd = tf.concat([self.question_embedd, question_NE_embed], axis=2)
 
-		
-		
-		
+		# print self.passage_embedd.get_shape().as_list()
+		# print self.question_embedd.get_shape().as_list()
+
 
 	def attention_encoder(self):
 		pass
