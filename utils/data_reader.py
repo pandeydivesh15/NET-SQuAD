@@ -14,20 +14,26 @@ class DataReader:
 			self, 
 			file_path,
 			vocab_path,
+			named_ent_info=False,
 			train_split_ratio=0.90,
 			dev_split_ratio=0.05,
 			test_split_ratio=0.05,
+			shuffle_data=False,
 			debug_mode=False, percent_debug_data=10):
 		self.file_path = file_path
 		self.vocab = pickle.load(open(vocab_path, 'rb'))
 
 		self.read_data(
+			named_ent_info,
 			train_split_ratio, dev_split_ratio, test_split_ratio, 
+			shuffle_data,
 			debug_mode, percent_debug_data)
 
 	def read_data(
 			self, 
+			named_ent_info,
 			train_split_ratio, dev_split_ratio, test_split_ratio, 
+			shuffle_data,
 			debug_mode, percent_debug_data):
 
 		assert (train_split_ratio + dev_split_ratio + test_split_ratio) == 1
@@ -40,6 +46,14 @@ class DataReader:
 		for x in self.data:
 			x['ques'] = [int(i) for i in x['ques'].strip('[').strip(']').split(',')]
 			x['context'] = [int(i) for i in x['context'].strip('[').strip(']').split(',')]
+			x['pos_context'] = [int(i) for i in x['pos_context'].strip('[').strip(']').split(',')]
+			x['pos_ques'] = [int(i) for i in x['pos_ques'].strip('[').strip(']').split(',')]
+
+			if named_ent_info:
+				x['CG_NE_ques'] = [int(i) for i in x['CG_NE_ques'].strip('[').strip(']').split(',')]
+				x['FG_NE_ques'] = [int(i) for i in x['FG_NE_ques'].strip('[').strip(']').split(',')]
+				x['CG_NE_context'] = [int(i) for i in x['CG_NE_context'].strip('[').strip(']').split(',')]
+				x['FG_NE_context'] = [int(i) for i in x['FG_NE_context'].strip('[').strip(']').split(',')]
 
 		# Now, `self.data` is a list of dict
 		# shuffle(self.data)
@@ -54,7 +68,7 @@ class DataReader:
 						int((train_split_ratio + dev_split_ratio) * data_size)]
 		self.test = self.data[int(- (test_split_ratio) * data_size):]
 		
-		if not debug_mode:
+		if shuffle_data:
 			shuffle(self.train)
 			shuffle(self.dev)
 			shuffle(self.test)
