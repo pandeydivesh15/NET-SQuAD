@@ -12,7 +12,7 @@ WORD_VOCAB = WordVocab()
 
 EMBEDD_MATRIX = None
 
-VECTOR_DIM = 300
+VECTOR_DIM = 100
 
 def save_():
 	pickle_out = open(VOCAB_SAVE_PATH + 'char_vocab.pickle', 'wb')
@@ -30,7 +30,7 @@ def load_word_vocab():
 def main():
 	# Get Github's char embeddings
 	NLP = {}
-	with open("./data/GloVe/glove.840B.300d-char.txt", "r") as file:
+	with open("./data/GloVe/glove.6B.100d-char.txt", "r") as file:
 		for line in file:
 			l = line.strip().split()
 			NLP[l[0]] = np.array([float(l[x]) for x in range(1,VECTOR_DIM+1)])

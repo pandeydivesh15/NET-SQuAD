@@ -94,6 +94,9 @@ class DataReader:
 
 		return self.data_dict[choice]
 
+	def get_training_data_size(self):
+		return len(self.train)
+
 
 
 

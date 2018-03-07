@@ -11,11 +11,11 @@ def load_vector_dict():
 
 	POS_NLP = w2v.Word2Vec.load("./data/saves/POS_embedd/POS_small.w2v")
 
-def get_sentence_vectors(sentence):
+def get_sentence_POS_vectors(sentence_list):
 	"""
 	Returns word vectors for complete sentence as a python list"""
-	s = sentence.strip().split()
-	vec = [ get_word_vector(word) for word in s ]
+	# s = sentence.strip().split()
+	vec = [ get_POS_vector(word) for word in sentence_list]
 	return vec
 
 def get_POS_vector(word):

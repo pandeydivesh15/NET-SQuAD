@@ -14,11 +14,11 @@ def load_NE_vector_dict():
 			l = line.strip().split()
 			NE_NLP[l[0]] = np.array([float(l[x]) for x in range(1,NE_VECTOR_DIM+1)])
 
-def get_sentence_NE_vectors(sentence):
+def get_sentence_NE_vectors(sentence_list):
 	"""
 	Returns word vectors for complete sentence as a python list"""
-	s = sentence.strip().split()
-	vec = [ get_NE_word_vector(word) for word in s ]
+	# s = sentence.strip().split()
+	vec = [ get_NE_word_vector(word) for word in sentence_list]
 	return vec
 
 def get_NE_word_vector(word):

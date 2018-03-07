@@ -1,6 +1,6 @@
 import numpy as np
 
-VECTOR_DIM = 50
+VECTOR_DIM = 100
 NLP = None
 
 def load_vector_dict():
@@ -9,16 +9,16 @@ def load_vector_dict():
 		return
 
 	NLP = {}
-	with open("./data/GloVe/glove.6B.50d.txt", "r") as file:
+	with open("./data/GloVe/glove.6B.100d.txt", "r") as file:
 		for line in file:
 			l = line.strip().split()
 			NLP[l[0]] = np.array([float(l[x]) for x in range(1,VECTOR_DIM+1)])
 
-def get_sentence_vectors(sentence):
+def get_sentence_vectors(sentence_list):
 	"""
 	Returns word vectors for complete sentence as a python list"""
-	s = sentence.strip().split()
-	vec = [ get_word_vector(word) for word in s ]
+	# s = sentence.strip().split()
+	vec = [ get_word_vector(word) for word in sentence_list]
 	return vec
 
 def get_word_vector(word):
