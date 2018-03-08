@@ -3,14 +3,13 @@
 
 import tensorflow as tf
 
-REGUL_CONSTANT = 0.1
+REGUL_CONSTANT = 0.001
 
 def conv2d(input_, output_dim, k_h, k_w, name, reuse_scope=None): 
 	with tf.variable_scope(name, reuse=reuse_scope):
 		w = tf.get_variable('w', [k_h, k_w, input_.get_shape()[-1], output_dim],
 			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
-		b = tf.get_variable('b', [output_dim],
-			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
+		b = tf.get_variable('b', [output_dim])
 
 	return tf.nn.conv2d(input_, w, strides=[1, 1, 1, 1], padding='VALID') + b
 
@@ -20,13 +19,11 @@ def highway(input_, output_size, bias=-2.0, reuse_scope=None):
 	with tf.variable_scope("Highway", reuse=reuse_scope):
 		w_h = tf.get_variable("w_h", [output_size, shape[1]], dtype=input_.dtype,
 			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
-		b_h = tf.get_variable("b_h", [output_size], dtype=input_.dtype,
-			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
+		b_h = tf.get_variable("b_h", [output_size], dtype=input_.dtype)
 
 		w_t = tf.get_variable("w_t", [output_size, shape[1]], dtype=input_.dtype,
 			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
-		b_t = tf.get_variable("b_t", [output_size], dtype=input_.dtype,
-			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
+		b_t = tf.get_variable("b_t", [output_size], dtype=input_.dtype)
 
 		g = tf.nn.relu(tf.matmul(input_, tf.transpose(w_h)) + b_h)
 

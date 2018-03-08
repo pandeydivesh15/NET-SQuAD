@@ -34,14 +34,14 @@ CHAR_EMBEDD_SIZE = CHAR_EMBEDD_MATRIX.shape[1]
 
 class AttentionNetwork():
 	def __init__(self, data_reader, *arg):
-		self.batch_size = 40
+		self.batch_size = 8
 
-		self.rnn_state_units_1 = 100
-		self.rnn_state_units_2 = 100
-		self.rnn_state_units_3 = 100
-		self.dropout = 0.1
-		self.learning_rate = 0.001
-		self.regul_constant = 0.1
+		self.rnn_state_units_1 = 80
+		self.rnn_state_units_2 = 80
+		self.rnn_state_units_3 = 80
+		self.dropout = 0.0
+		self.learning_rate = 0.00001
+		self.regul_constant = 0.001
 
 		self.data_reader = data_reader
 		
@@ -76,20 +76,6 @@ class AttentionNetwork():
 
 		self.passage_NE_embedd_2 = tf.placeholder(tf.float32, (None, None, NE_VECTOR_DIM))
 		self.question_NE_embedd_2 = tf.placeholder(tf.float32, (None, None, NE_VECTOR_DIM))
-		# self.passage_word_embedd = tf.placeholder(tf.float32, (20, 40, VECTOR_DIM))
-		# self.question_word_embedd = tf.placeholder(tf.float32, (20, 25, VECTOR_DIM))
-
-		# self.passage_char_inputs= tf.placeholder(tf.int32, (20, 40, 70))
-		# self.question_char_inputs = tf.placeholder(tf.int32, (20, 25, 70))
-
-		# self.passage_POS_embedd = tf.placeholder(tf.float32, (20, 40, POS_VECTOR_DIM))
-		# self.question_POS_embedd = tf.placeholder(tf.float32, (20, 25, POS_VECTOR_DIM))
-
-		# self.passage_NE_embedd_1 = tf.placeholder(tf.float32, (20, 40, NE_VECTOR_DIM))
-		# self.question_NE_embedd_1 = tf.placeholder(tf.float32, (20, 25, NE_VECTOR_DIM))
-
-		# self.passage_NE_embedd_2 = tf.placeholder(tf.float32, (20, 40, NE_VECTOR_DIM))
-		# self.question_NE_embedd_2 = tf.placeholder(tf.float32, (20, 25, NE_VECTOR_DIM))
 
 		self.start_label = tf.placeholder(tf.int32, [None, 1])
 		self.end_label = tf.placeholder(tf.int32, [None, 1])
@@ -188,6 +174,7 @@ class AttentionNetwork():
 	def attention_encoder(self):
 		# First, encode temporal information using RNN
 		with tf.variable_scope("temporal_embedd") as scope:
+			# lstm_cell_1 = tf.contrib.rnn.LayerNormBasicLSTMCell(self.rnn_state_units_1, dropout_keep_prob=1-self.dropout)
 			lstm_cell_1 = tf.contrib.rnn.GRUCell(self.rnn_state_units_1)
 			lstm_cell_1 = tf.contrib.rnn.DropoutWrapper(cell=lstm_cell_1, output_keep_prob=1-self.dropout)
 
@@ -256,8 +243,7 @@ class AttentionNetwork():
 			
 			w0 = tf.get_variable("w0", [q_embedd_size, 1], dtype=self.question_embedd.dtype,
 								 regularizer=tf.contrib.layers.l2_regularizer(self.regul_constant))
-			b0 = tf.get_variable("b0", [1], dtype=self.question_embedd.dtype,
-								 regularizer=tf.contrib.layers.l2_regularizer(self.regul_constant))
+			b0 = tf.get_variable("b0", [1], dtype=self.question_embedd.dtype)
 
 			question_embedd_reshaped = tf.reshape(self.question_embedd, [-1, q_embedd_size])
 
@@ -283,8 +269,7 @@ class AttentionNetwork():
 				[1, attended_vec_shape[1], 1])
 
 			# RNN cell
-			cell = tf.contrib.rnn.GRUCell(num_units=q_embedd_size)
-
+			cell = tf.contrib.rnn.GRUCell(num_units=q_embedd_size) 
 			while True:
 				w1 = tf.get_variable(
 					"w1", [attended_embedd_size, 1], 
@@ -298,7 +283,7 @@ class AttentionNetwork():
 				attended_vec_reshaped = tf.reshape(self.final_attended_vector, [-1, attended_embedd_size])
 				hidden_state_reshaped = tf.reshape(hidden_state_augm, [-1, q_embedd_size])
 
-				tanh_values = tf.matmul(attended_vec_reshaped, w1) + tf.matmul(hidden_state_reshaped, w2)
+				tanh_values = tf.tanh(tf.matmul(attended_vec_reshaped, w1) + tf.matmul(hidden_state_reshaped, w2))
 				tanh_values = tf.reshape(tanh_values, [attended_vec_shape[0], attended_vec_shape[1]])
 				
 				softmax_scores = tf.nn.softmax(tanh_values)
@@ -328,13 +313,14 @@ class AttentionNetwork():
 		self.loss = tf.reduce_sum(tf.add(loss_start_ptr, loss_end_ptr))
 
 		regul_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-		global_regul_constant = 0.01 
+		global_regul_constant = 0.1 
 		self.loss_regul = self.loss + global_regul_constant * sum(regul_losses)
 
 		self.optimizer = self.get_optimizer().minimize(self.loss_regul)
 
 	def get_optimizer(self):
-		return tf.train.AdamOptimizer(self.learning_rate)
+		# return tf.train.AdamOptimizer(self.learning_rate)
+		return tf.train.MomentumOptimizer(self.learning_rate, momentum=0.8)
 
 	def train(self, epochs=10):
 		resume_at_epoch = self.get_past_epochs_info()
@@ -430,6 +416,9 @@ class AttentionNetwork():
 
 				loss,_ = self.sess.run([self.loss_regul, self.optimizer], feed_dict=feed_dict)
 				total_epoch_loss.append(loss)
+
+				if len(total_epoch_loss) % 15 == 0:
+					print loss
 
 				pbar.update(1)
 

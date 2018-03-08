@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-REGUL_CONSTANT=0.1
+REGUL_CONSTANT=0.001
 
 def apply_gate(input_, scope_name):
 	with tf.variable_scope(scope_name):
@@ -9,8 +9,7 @@ def apply_gate(input_, scope_name):
 
 		w = tf.get_variable("w", [embedd_size, embedd_size], dtype=input_.dtype,
 			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
-		b = tf.get_variable("b", [embedd_size], dtype=input_.dtype,
-			regularizer=tf.contrib.layers.l2_regularizer(REGUL_CONSTANT))
+		b = tf.get_variable("b", [embedd_size], dtype=input_.dtype)
 
 		input_reshaped = tf.reshape(input_, [-1, embedd_size])
 
