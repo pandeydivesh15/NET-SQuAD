@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-REGUL_CONSTANT=0.001
+REGUL_CONSTANT=0.01
 
 def apply_gate(input_, scope_name):
 	with tf.variable_scope(scope_name):

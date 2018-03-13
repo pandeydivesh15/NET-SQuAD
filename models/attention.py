@@ -7,7 +7,7 @@ I thank the original authors for sharing the code on Github"""
 
 import tensorflow as tf
 
-REGUL_CONSTANT = 0.001
+REGUL_CONSTANT = 0.01
 
 def sim_matrix(input_1, input_2):
 	input_1_shape = tf.shape(input_1)

@@ -6,6 +6,8 @@ import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
 
+from tensorflow.python import debug as tf_debug
+
 sys.path.append('utils')
 
 from get_word_vectors import VECTOR_DIM
@@ -34,14 +36,14 @@ CHAR_EMBEDD_SIZE = CHAR_EMBEDD_MATRIX.shape[1]
 
 class AttentionNetwork():
 	def __init__(self, data_reader, *arg):
-		self.batch_size = 8
+		self.batch_size = 10
 
-		self.rnn_state_units_1 = 80
-		self.rnn_state_units_2 = 80
-		self.rnn_state_units_3 = 80
-		self.dropout = 0.0
-		self.learning_rate = 0.00001
-		self.regul_constant = 0.001
+		self.rnn_state_units_1 = 64
+		self.rnn_state_units_2 = 64
+		self.rnn_state_units_3 = 64
+		self.dropout = 0.2
+		self.learning_rate = 0.0001
+		self.regul_constant = 0.01
 
 		self.data_reader = data_reader
 		
@@ -54,7 +56,7 @@ class AttentionNetwork():
 		self.attention_encoder()
 		self.output_decoder()
 
-		self.saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
+		self.saver = tf.train.Saver(max_to_keep=5)
 
 		init = tf.global_variables_initializer()
 		self.sess = tf.Session()
@@ -175,10 +177,10 @@ class AttentionNetwork():
 		# First, encode temporal information using RNN
 		with tf.variable_scope("temporal_embedd") as scope:
 			# lstm_cell_1 = tf.contrib.rnn.LayerNormBasicLSTMCell(self.rnn_state_units_1, dropout_keep_prob=1-self.dropout)
-			lstm_cell_1 = tf.contrib.rnn.GRUCell(self.rnn_state_units_1)
+			lstm_cell_1 = tf.contrib.rnn.BasicLSTMCell(self.rnn_state_units_1)
 			lstm_cell_1 = tf.contrib.rnn.DropoutWrapper(cell=lstm_cell_1, output_keep_prob=1-self.dropout)
 
-			lstm_cell_2 = tf.contrib.rnn.GRUCell(self.rnn_state_units_1)
+			lstm_cell_2 = tf.contrib.rnn.BasicLSTMCell(self.rnn_state_units_1)
 			lstm_cell_2 = tf.contrib.rnn.DropoutWrapper(cell=lstm_cell_2, output_keep_prob=1-self.dropout)
 			
 			# Passage/Context
@@ -205,7 +207,7 @@ class AttentionNetwork():
 		attended_P_and_Q = find_bidir_attention(self.passage_embedd, self.question_embedd, "attention")
 
 		with tf.variable_scope("temporal_attention"):
-			lstm_cell = tf.contrib.rnn.GRUCell(self.rnn_state_units_2)
+			lstm_cell = tf.contrib.rnn.BasicLSTMCell(self.rnn_state_units_2)
 			lstm_cell = tf.contrib.rnn.DropoutWrapper(cell=lstm_cell, output_keep_prob=1-self.dropout)
 			
 			attended_P_and_Q, _ = tf.nn.dynamic_rnn(lstm_cell, attended_P_and_Q, dtype=tf.float32)
@@ -222,7 +224,7 @@ class AttentionNetwork():
 			"self_attention")
 
 		with tf.variable_scope("temporal_self_attention"):
-			lstm_cell = tf.contrib.rnn.GRUCell(self.rnn_state_units_3)
+			lstm_cell = tf.contrib.rnn.BasicLSTMCell(self.rnn_state_units_3)
 			lstm_cell = tf.contrib.rnn.DropoutWrapper(cell=lstm_cell, output_keep_prob=1-self.dropout)
 			
 			self_attended_P, _ = tf.nn.dynamic_rnn(lstm_cell, self_attended_P, dtype=tf.float32)
@@ -414,6 +416,10 @@ class AttentionNetwork():
 					feed_dict[self.passage_NE_embedd_2] = para_fg
 					feed_dict[self.question_NE_embedd_2] = ques_fg
 
+				print start_index
+				print end_index
+				print [x.shape for x in para]
+
 				loss,_ = self.sess.run([self.loss_regul, self.optimizer], feed_dict=feed_dict)
 				total_epoch_loss.append(loss)
 
@@ -473,6 +479,12 @@ def add_padding(batch, word_vocab, char_vocab=CHAR_VOCAB):
 		# Modify end and start labels
 		elem['answer_start'] = elem['answer_start'] + elem['padding_len_passage']
 		elem['answer_end']   = elem['answer_end'] + elem['padding_len_passage']
+
+		# Temporary fix: Some problem in indexing
+		if elem['answer_start'] == max_passage_len:
+			elem['answer_start'] -= 1
+		if elem['answer_end'] == max_passage_len:
+			elem['answer_end'] -= 1
 
 		# For POS vectors
 		elem['pos_context'] = [word_vocab.default_index]*(elem['padding_len_passage']) + elem['pos_context']

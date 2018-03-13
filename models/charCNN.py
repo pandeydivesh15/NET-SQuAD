@@ -3,7 +3,7 @@
 
 import tensorflow as tf
 
-REGUL_CONSTANT = 0.001
+REGUL_CONSTANT = 0.01
 
 def conv2d(input_, output_dim, k_h, k_w, name, reuse_scope=None): 
 	with tf.variable_scope(name, reuse=reuse_scope):
