@@ -416,15 +416,11 @@ class AttentionNetwork():
 					feed_dict[self.passage_NE_embedd_2] = para_fg
 					feed_dict[self.question_NE_embedd_2] = ques_fg
 
-				print start_index
-				print end_index
-				print [x.shape for x in para]
-
 				loss,_ = self.sess.run([self.loss_regul, self.optimizer], feed_dict=feed_dict)
 				total_epoch_loss.append(loss)
 
-				if len(total_epoch_loss) % 15 == 0:
-					print loss
+				if len(total_epoch_loss) % 100 == 0:
+					print "Loss after 100 iterations (same epoch): ", str(loss)
 
 				pbar.update(1)
 
