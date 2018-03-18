@@ -7,6 +7,9 @@ main_data_reader = DR.DataReader(
 	vocab_path="./data/saves/vocab/word_vocab.pickle",
 	named_ent_info=True,
 	shuffle_data=True,
+	train_split_ratio=0.95,
+	dev_split_ratio=0.0, 
+	test_split_ratio=0.05,
 	debug_mode=False,
 	percent_debug_data=1)
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-VECTOR_DIM = 100
+VECTOR_DIM = 300
 NLP = None
 
 def load_vector_dict():
@@ -9,7 +9,7 @@ def load_vector_dict():
 		return
 
 	NLP = {}
-	with open("./data/GloVe/glove.6B.100d.txt", "r") as file:
+	with open("../data/GloVe/glove.840B.300d.txt", "r") as file:
 		for line in file:
 			l = line.strip().split()
 			NLP[l[0]] = np.array([float(l[x]) for x in range(1,VECTOR_DIM+1)])

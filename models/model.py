@@ -36,13 +36,13 @@ CHAR_EMBEDD_SIZE = CHAR_EMBEDD_MATRIX.shape[1]
 
 class AttentionNetwork():
 	def __init__(self, data_reader, *arg):
-		self.batch_size = 10
-
-		self.rnn_state_units_1 = 64
-		self.rnn_state_units_2 = 64
-		self.rnn_state_units_3 = 64
+		# Network's constants
+		self.batch_size = 20
+		self.rnn_state_units_1 = 100
+		self.rnn_state_units_2 = 150
+		self.rnn_state_units_3 = 150
 		self.dropout = 0.2
-		self.learning_rate = 0.0001
+		self.learning_rate = 0.01
 		self.regul_constant = 0.01
 
 		self.data_reader = data_reader
@@ -315,7 +315,7 @@ class AttentionNetwork():
 		self.loss = tf.reduce_sum(tf.add(loss_start_ptr, loss_end_ptr))
 
 		regul_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-		global_regul_constant = 0.1 
+		global_regul_constant = 1.0 
 		self.loss_regul = self.loss + global_regul_constant * sum(regul_losses)
 
 		self.optimizer = self.get_optimizer().minimize(self.loss_regul)
