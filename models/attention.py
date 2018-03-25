@@ -32,7 +32,7 @@ def sim_matrix(input_1, input_2):
 	input_1_augm = tf.reshape(input_1_augm, [-1, tf.shape(input_1_augm)[-1]])
 	input_2_augm = tf.reshape(input_2_augm, [-1, tf.shape(input_1_augm)[-1]])
 	elem_wise_product = tf.reshape(
-		input_1_augm * input_2_augm,
+		tf.multiply(input_1_augm, input_2_augm),
 		[-1, tf.shape(input_1_augm)[-1]])
 
 	similarity_scores = tf.matmul(input_1_augm, w1) + \
@@ -66,8 +66,8 @@ def find_bidir_attention(input_1, input_2, scope_name, reuse_scope=None):
 		return tf.concat(
 			[input_1, 
 			 attended_input_2_vector,
-			 input_1 * attended_input_2_vector,
-			 input_1 * attended_input_1_vector],
+			 tf.multiply(input_1, attended_input_2_vector),
+			 tf.multiply(input_1, attended_input_1_vector)],
 			axis=2)
 
 

@@ -35,10 +35,10 @@ def highway(input_, output_size, bias=-2.0, reuse_scope=None):
 
 def charCNN(
 	char_embeddings,
-	kernels = [1, 2, 3, 4],
+	kernels = [1, 2, 3, 4, 5],
 	# kernels = [1, 2, 3, 4, 5, 6, 7],
 	# kernel_features = [50, 100, 150, 200, 200, 200, 200],
-	kernel_features = [50, 100, 100, 150],
+	kernel_features = [50, 50, 100, 150, 150],
 	reuse_scope=None):
 	
 	max_word_length = tf.shape(char_embeddings)[1]

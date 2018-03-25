@@ -1,6 +1,6 @@
 import numpy as np
 
-NE_VECTOR_DIM = 50 # NE = Named Entity
+NE_VECTOR_DIM = 100 # NE = Named Entity
 NE_NLP = None
 
 def load_NE_vector_dict():
@@ -9,7 +9,7 @@ def load_NE_vector_dict():
 		return
 
 	NE_NLP = {}
-	with open("./data/GloVe/glove.6B.50d.txt", "r") as file:
+	with open("./data/GloVe/glove.6B.100d.txt", "r") as file:
 		for line in file:
 			l = line.strip().split()
 			NE_NLP[l[0]] = np.array([float(l[x]) for x in range(1,NE_VECTOR_DIM+1)])
@@ -30,5 +30,5 @@ def get_NE_word_vector(word):
 	if NE_NLP.has_key(word):
 		return NE_NLP[word]
 	else:
-		return np.zeros(NE_VECTOR_DIM)
+		return np.zeros(NE_VECTOR_DIM) + 1e-10
 	

@@ -170,7 +170,8 @@ def main():
 
 			for i, ques in enumerate(passage['qas']):
 				ques_tokens, pos_tags = all_ques_tokens[i], all_pos_tags[i]
-				
+				ques_id = ques['id']
+
 				pos_training_file.write(" ".join(pos_tags) + ' \n')
 
 				ques_tokens = find_word_tokens(ques_tokens)
@@ -179,15 +180,16 @@ def main():
 				answer_start, answer_end = find_boundaries(ques['answers'][0], passage['context'])
 
 				processed_records.append([
-					context_tokens, ques_tokens, answer_start, 
-					answer_end, context_pos_tokens, ques_pos_tokens])
+					context_tokens, ques_tokens, ques_id,
+					answer_start, answer_end, 
+					context_pos_tokens, ques_pos_tokens])
 
 			pos_training_file.write("\n")
 
 		pos_training_file.close()
 
 	# Make a pandas dataframe and store processed data in a CSV file
-	labels = ['context', 'ques', 'answer_start', 'answer_end', 'pos_context', 'pos_ques']
+	labels = ['context', 'ques', 'id', 'answer_start', 'answer_end', 'pos_context', 'pos_ques']
 	df = pd.DataFrame.from_records(processed_records, columns=labels)
 
 	save_vocabs()
