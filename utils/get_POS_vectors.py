@@ -24,8 +24,9 @@ def get_POS_vector(word):
 
 	load_vector_dict()
 
-	s = word.decode("utf-8")
 	try:
+		s = word.decode("utf-8")
+		s = s.upper()
 		vect = POS_NLP.wv[s]
 	except:
 		vect = np.zeros(POS_VECTOR_DIM, dtype = np.float32)
